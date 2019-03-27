@@ -69,7 +69,9 @@ export type Props = {
   onResize: EventCallback,
   onResizeStart: EventCallback,
   onResizeStop: EventCallback,
-  children: ReactChildrenArray<ReactElement<any>>
+  children: ReactChildrenArray<ReactElement<any>>,
+
+  onCollide: any => void
 };
 // End Types
 
@@ -176,6 +178,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // Calls when resize is complete.
     onResizeStop: PropTypes.func,
 
+    // Calls when the objects collides
+    onCollide: PropTypes.func,
+
     //
     // Other validations
     //
@@ -223,7 +228,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     onDragStop: noop,
     onResizeStart: noop,
     onResize: noop,
-    onResizeStop: noop
+    onResizeStop: noop,
+
+    onCollide: noop
   };
 
   state: State = {
@@ -241,6 +248,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     oldResizeItem: null
   };
 
+  childrenPostion: Map<string, any> = new Map();
+
   constructor(props: Props, context: any): void {
     super(props, context);
     autoBindHandlers(this, [
@@ -251,6 +260,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       "onResize",
       "onResizeStop"
     ]);
+
+    // $FlowFixMe
+    this.setChildrenPosition = this.setChildrenPosition.bind(this);
   }
 
   componentDidMount() {
@@ -260,7 +272,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.onLayoutMaybeChanged(this.state.layout, this.props.layout);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     let newLayoutBase;
     // Legacy support for compactType
     // Allow parent to set layout directly.
@@ -423,6 +435,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.onLayoutMaybeChanged(newLayout, oldLayout);
   }
 
+  setChildrenPosition(childId: any, position: any) {
+    this.childrenPostion.set(childId, position);
+  }
+
   onLayoutMaybeChanged(newLayout: Layout, oldLayout: ?Layout) {
     if (!oldLayout) oldLayout = this.state.layout;
     if (!isEqual(oldLayout, newLayout)) {
@@ -445,7 +461,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
   onResize(i: string, w: number, h: number, { e, node }: GridResizeEvent) {
     const { layout, oldResizeItem } = this.state;
-    const { cols, preventCollision } = this.props;
+    // const { cols, preventCollision } = this.props;
+    const { preventCollision } = this.props;
     const l: ?LayoutItem = getLayoutItem(layout, i);
     if (!l) return;
 
@@ -492,16 +509,17 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.props.onResize(layout, oldResizeItem, l, placeholder, e, node);
 
     // Re-compact the layout and set the drag placeholder.
-    this.setState({
+    /* this.setState({
       layout: compact(layout, this.compactType(), cols),
       activeDrag: placeholder
-    });
+    }); */
   }
 
   onResizeStop(i: string, w: number, h: number, { e, node }: GridResizeEvent) {
     const { layout, oldResizeItem } = this.state;
     const { cols } = this.props;
     var l = getLayoutItem(layout, i);
+    this.fetchAllItemsUnderPlaceholder(oldResizeItem, l);
 
     this.props.onResizeStop(layout, oldResizeItem, l, null, e, node);
 
@@ -516,6 +534,52 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     });
 
     this.onLayoutMaybeChanged(newLayout, oldLayout);
+  }
+
+  fetchAllItemsUnderPlaceholder(oldItem: any, newItem: any) {
+    const { onCollide } = this.props;
+    const currentBox = this.childrenPostion.get(newItem.i);
+
+    if (!currentBox) return;
+
+    if (
+      !currentBox.left &&
+      !currentBox.width &&
+      !currentBox.Y &&
+      !currentBox.height
+    )
+      return;
+
+    const currentBoxX = currentBox.left + currentBox.width + 10;
+    const currentBoxY = currentBox.y + currentBox.height + 10;
+
+    // Cache all ites
+    const collidedObjs = [];
+
+    // loop through layout items  and draw a circle from the current item to see if the width
+    // and height from the center overlaps with any of the children
+    for (let i = 0; i < this.props.layout.length; i++) {
+      const element = this.props.layout[i];
+      if (oldItem.i && element.i && oldItem.i !== element.i) {
+        const elementBox = this.childrenPostion.get(element.i);
+
+        if (!elementBox) continue;
+
+        const tempBoxX = elementBox.x + elementBox.width;
+        const tempBoxY = elementBox.y + elementBox.height;
+
+        if (
+          tempBoxX >= currentBox.x &&
+          tempBoxX <= currentBoxX &&
+          (tempBoxY >= currentBox.y && tempBoxY <= currentBoxY)
+        ) {
+          console.log("i => " + element.i);
+          collidedObjs.push(element);
+        }
+      }
+    }
+
+    onCollide(collidedObjs);
   }
 
   /**
@@ -553,6 +617,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         isDraggable={false}
         isResizable={false}
         useCSSTransforms={useCSSTransforms}
+        setChildrenPosition={(a, b) => console.log(a, b)}
       >
         <div />
       </GridItem>
@@ -621,6 +686,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         maxH={l.maxH}
         maxW={l.maxW}
         static={l.static}
+        setChildrenPosition={this.setChildrenPosition}
       >
         {child}
       </GridItem>
@@ -646,3 +712,12 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     );
   }
 }
+
+/*
+
+if((tempBoxX >= currentBox.x && tempBoxX <= currentBoxX)
+        && (tempBoxY >= currentBox.y && tempBoxY <= currentBoxY)
+        ) {
+          console.log('i => ' + element.i);
+          collidedObjs.push(element);
+        }*/

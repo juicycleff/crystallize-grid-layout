@@ -25,7 +25,8 @@ type GridItemCallback<Data: GridDragEvent | GridResizeEvent> = (
 type State = {
   resizing: ?{ width: number, height: number },
   dragging: ?{ top: number, left: number },
-  className: string
+  className: string,
+  position: ?any
 };
 
 type Props = {
@@ -64,7 +65,9 @@ type Props = {
   onDragStop?: GridItemCallback<GridDragEvent>,
   onResize?: GridItemCallback<GridResizeEvent>,
   onResizeStart?: GridItemCallback<GridResizeEvent>,
-  onResizeStop?: GridItemCallback<GridResizeEvent>
+  onResizeStop?: GridItemCallback<GridResizeEvent>,
+
+  setChildrenPosition: (any, any) => void
 };
 
 /**
@@ -158,7 +161,8 @@ export default class GridItem extends React.Component<Props, State> {
   state: State = {
     resizing: null,
     dragging: null,
-    className: ""
+    className: "",
+    position: "ghgh"
   };
 
   // Helper for generating column width
@@ -460,12 +464,15 @@ export default class GridItem extends React.Component<Props, State> {
       y,
       w,
       h,
+      i,
       isDraggable,
       isResizable,
-      useCSSTransforms
+      useCSSTransforms,
+      setChildrenPosition
     } = this.props;
 
     const pos = this.calcPosition(x, y, w, h, this.state);
+
     const child = React.Children.only(this.props.children);
 
     // Create the child element. We clone the existing element but modify its className and style.
@@ -482,6 +489,19 @@ export default class GridItem extends React.Component<Props, State> {
           cssTransforms: useCSSTransforms
         }
       ),
+      ref: el => {
+        if (!el) return;
+        // console.log("initial width", el.getBoundingClientRect().width);
+        let prevValue = JSON.stringify(el.getBoundingClientRect());
+        setTimeout(() => {
+          const nextValue = JSON.stringify(el.getBoundingClientRect());
+          if (nextValue === prevValue) {
+            setChildrenPosition(i, el.getBoundingClientRect());
+          } else {
+            prevValue = nextValue;
+          }
+        }, 100);
+      },
       // We can set the width and height on the child, but unfortunately we can't set the position.
       style: {
         ...this.props.style,
