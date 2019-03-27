@@ -71,6 +71,10 @@ class ShowcaseLayout extends React.Component {
     });
   };
 
+  onCollide = list => {
+    console.log("element", list);
+  };
+
   render() {
     return (
       <div>
@@ -98,6 +102,7 @@ class ShowcaseLayout extends React.Component {
           useCSSTransforms={this.state.mounted}
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
+          onCollide={this.onCollide}
         >
           {this.generateDOM()}
         </ResponsiveReactGridLayout>

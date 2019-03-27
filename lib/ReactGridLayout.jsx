@@ -573,13 +573,17 @@ export default class ReactGridLayout extends React.Component<Props, State> {
           tempBoxX <= currentBoxX &&
           (tempBoxY >= currentBox.y && tempBoxY <= currentBoxY)
         ) {
-          console.log("i => " + element.i);
+          // console.log("i => " + element.i);
           collidedObjs.push(element);
         }
       }
     }
 
-    onCollide(collidedObjs);
+    const collision = {
+      item: newItem,
+      elements: collidedObjs
+    };
+    onCollide(collision);
   }
 
   /**
