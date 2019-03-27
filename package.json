@@ -1,5 +1,5 @@
 {
-  "name": "crytallize-grid-layout",
+  "name": "crystallize-grid-layout",
   "version": "0.0.1",
   "description": "You should look deeper for React.",
   "main": "index.js",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:juicycleff/crytallize-grid-layout.git"
+    "url": "git@github.com:juicycleff/crystallize-grid-layout.git"
   },
   "keywords": [
     "react",
@@ -32,9 +32,9 @@
   "author": "Rex Raphael <rex.raphael@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/juicycleff/crytallize-grid-layout/issues"
+    "url": "https://github.com/juicycleff/crystallize-grid-layout/issues"
   },
-  "homepage": "https://github.com/juicycleff/crytallize-grid-layout",
+  "homepage": "https://github.com/juicycleff/crystallize-grid-layout",
   "dependencies": {
     "classnames": "2.x",
     "lodash.isequal": "^4.0.0",
