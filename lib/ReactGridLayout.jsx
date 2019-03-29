@@ -71,7 +71,8 @@ export type Props = {
   onResizeStop: EventCallback,
   children: ReactChildrenArray<ReactElement<any>>,
 
-  onCollide: any => void
+  onCollide: any => void,
+  onLayoutAdded: any => void
 };
 // End Types
 
@@ -181,6 +182,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // Calls when the objects collides
     onCollide: PropTypes.func,
 
+    // Calls when the objects collides
+    onLayoutAdded: PropTypes.func,
     //
     // Other validations
     //
@@ -230,7 +233,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     onResize: noop,
     onResizeStop: noop,
 
-    onCollide: noop
+    onCollide: noop,
+    onLayoutAdded: noop
   };
 
   state: State = {
@@ -550,11 +554,12 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     )
       return;
 
+    const collidedObjs = [];
+
     const currentBoxX = currentBox.left + currentBox.width + 10;
     const currentBoxY = currentBox.y + currentBox.height + 10;
 
     // Cache all ites
-    const collidedObjs = [];
 
     // loop through layout items  and draw a circle from the current item to see if the width
     // and height from the center overlaps with any of the children
@@ -708,9 +713,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     return (
       <div className={mergedClassName} style={mergedStyle}>
-        {React.Children.map(this.props.children, child =>
-          this.processGridItem(child)
-        )}
+        {React.Children.map(this.props.children, child => {
+          this.props.onLayoutAdded(child.props["data-grid"]);
+          return this.processGridItem(child);
+        })}
         {this.placeholder()}
       </div>
     );

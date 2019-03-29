@@ -28,7 +28,11 @@ class ShowcaseLayout extends React.Component {
   generateDOM() {
     return _.map(this.state.layouts.lg, function(l, i) {
       return (
-        <div key={i} className={l.static ? "static" : ""}>
+        <div
+          key={i}
+          className={l.static ? "static" : ""}
+          data-grid={{ x: 0, y: 0, w: 1, h: 2, static: true }}
+        >
           {l.static ? (
             <span
               className="text"
